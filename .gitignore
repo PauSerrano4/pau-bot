@@ -1,0 +1,18 @@
+# Entorn i cache de Python
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Clau API — MAI a GitHub
+.env
+.streamlit/secrets.toml
+
+# Dades personals: xats de WhatsApp exportats i tot el que se n'ha derivat.
+# Contenen converses reals d'altres persones que no han donat consentiment
+# per publicar-se — no han d'acabar en un repositori públic.
+chats/
+*.zip
+all_extracted_examples.py
+filtered_examples.py
+style_index.pkl

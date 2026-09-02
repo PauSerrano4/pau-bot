@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+chats/
+*.zip
+
+# Dades personals extretes — si les vols dins la imatge (per exemple per
+# desplegar amb el teu estil ja indexat), esborra les línies següents.
+# Si prefereixes que cadascú generi el seu propi corpus, deixa-les.
+all_extracted_examples.py
+filtered_examples.py
+style_index.pkl
