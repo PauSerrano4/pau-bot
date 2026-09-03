@@ -176,8 +176,8 @@ if user_input:
 with st.sidebar:
     st.header("About this bot")
     st.write(
-        "This chatbot has learned Pau's writing style from real "
-        "conversations, so it replies the way he actually would — same "
+        "I trained this chatbot on my own writing style, using real "
+        "conversations, so it replies the way I actually would — same "
         "tone, same phrasing, same vibe."
     )
     st.write(
@@ -186,8 +186,8 @@ with st.sidebar:
         "busy periods."
     )
     st.write(
-        "**Heads up:** this is a fun personal project, not a real "
-        "conversation with Pau — treat what it says accordingly!"
+        "**Heads up:** this is just a fun personal project, not really "
+        "me — treat what it says accordingly!"
     )
     st.caption(
         f"Messages used this session: "
