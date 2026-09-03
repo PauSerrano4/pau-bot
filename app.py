@@ -73,7 +73,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
+    avatar = "🧑" if msg["role"] == "user" else "🗣️"
+    with st.chat_message(msg["role"], avatar=avatar):
         st.markdown(msg["content"])
 
 # --------------------------------------------------------------------------
@@ -118,10 +119,10 @@ def call_gemini_with_retry(contents, system_prompt):
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar="🧑"):
         st.markdown(user_input)
 
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar="🗣️"):
         with st.spinner("Thinking of how Pau would put it..."):
             system_prompt = build_system_prompt(user_message=user_input)
 
@@ -173,3 +174,10 @@ with st.sidebar:
     if st.button("Clear conversation"):
         st.session_state.messages = []
         st.rerun()
+
+    st.divider()
+    st.caption(
+        "Built by Pau · "
+        "[GitHub](https://github.com/PauSerrano4/pau-bot) · "
+        "[LinkedIn](https://www.linkedin.com/in/pauserranosanz/)"
+    )
