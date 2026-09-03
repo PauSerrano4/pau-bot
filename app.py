@@ -20,7 +20,7 @@ import warnings
 import streamlit as st
 from google import genai
 from google.genai import types
-from google.genai.errors import ServerError
+from google.genai.errors import ServerError, ClientError
 
 from persona_config import build_system_prompt
 
@@ -32,12 +32,16 @@ warnings.filterwarnings("ignore", category=UserWarning, module="transformers")
 # --------------------------------------------------------------------------
 # Configuració
 # --------------------------------------------------------------------------
-# Model vigent en la capa gratuïta (setembre 2026). MODEL_FALLBACK
-# s'utilitza si el principal està saturat (error 503). Si en el futur
-# dona error "model not found", consulta els models disponibles a
-# https://ai.google.dev/gemini-api/docs/models
-MODEL = "gemini-3.7-flash"
-MODEL_FALLBACK = "gemini-2.5-flash"
+# IMPORTANT (setembre 2026): Google ha retallat molt els límits gratuïts
+# dels models Gemini 3.x "normals" (gemini-3.7-flash: només 20
+# peticions/dia!). Els models "flash-lite" tenen límits diaris molt més
+# generosos (900-1500/dia) i van perfectes per imitar estil, que no
+# necessita raonament complex. MODEL_FALLBACK s'usa si el principal
+# falla (servidor saturat o quota exhaurida). Si en el futur dona error
+# "model not found" o els límits tornen a canviar, consulta
+# https://ai.google.dev/gemini-api/docs/rate-limits
+MODEL = "gemini-3.1-flash-lite"
+MODEL_FALLBACK = "gemini-2.5-flash-lite"
 MAX_TOKENS = 1024
 MAX_RETRIES = 3
 
@@ -73,7 +77,7 @@ user_input = st.chat_input("Escriu un missatge com si li escrivissis a Pau...")
 
 def call_gemini_with_retry(contents, system_prompt):
     """Crida a l'API amb reintents i fallback si el model principal
-    està saturat (error 503, comú en models nous/en molta demanda)."""
+    està saturat (503) o ha exhaurit la quota diària/per minut (429)."""
     config = types.GenerateContentConfig(
         system_instruction=system_prompt,
         max_output_tokens=MAX_TOKENS,
@@ -93,7 +97,15 @@ def call_gemini_with_retry(contents, system_prompt):
                     time.sleep(2 ** attempt)  # espera 1s, 2s, 4s
                     continue
                 raise  # altres errors de servidor, no reintentem
-        # esgotats els reintents amb aquest model, prova el següent
+            except ClientError as e:
+                last_error = e
+                if getattr(e, "code", None) == 429:
+                    # Quota exhaurida (diària o per minut): reintentar amb
+                    # el mateix model no serveix de res si és el límit
+                    # diari, així que passem directament al següent model.
+                    break
+                raise  # altres errors de client (petició mal formada, etc.)
+        # esgotats els reintents (o quota exhaurida) amb aquest model
 
     raise last_error
 
@@ -104,7 +116,7 @@ if user_input:
         st.markdown(user_input)
 
     with st.chat_message("assistant"):
-        with st.spinner("Pensant..."):
+        with st.spinner("Pensant com ho diria Pau..."):
             system_prompt = build_system_prompt(user_message=user_input)
 
             # El nou SDK fa servir "user"/"model" en lloc de "user"/"assistant"
@@ -119,6 +131,12 @@ if user_input:
             try:
                 response = call_gemini_with_retry(contents, system_prompt)
                 reply = response.text
+            except ClientError:
+                reply = (
+                    "⚠️ S'ha exhaurit la quota gratuïta de Gemini per avui "
+                    "(o per aquest minut). Torna-ho a provar més tard, o "
+                    "revisa el teu ús a https://ai.dev/rate-limit"
+                )
             except ServerError:
                 reply = (
                     "⚠️ Els servidors de Gemini estan saturats ara mateix. "
