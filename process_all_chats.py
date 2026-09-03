@@ -109,24 +109,22 @@ def main():
             seen.add(key)
             unique_pairs.append((received, sent))
 
-    out_path = Path("all_extracted_examples.py")
+    out_path = Path("whatsapp_examples.py")
     with out_path.open("w", encoding="utf-8") as f:
-        f.write("# Exemples extrets automàticament de tots els xats — REVISA'LS\n")
-        f.write("# Esborra els sensibles, repetitius o poc representatius abans\n")
-        f.write("# de copiar-ne una selecció (15-30) a persona_config.py\n\n")
-        f.write("ALL_EXTRACTED_EXAMPLES = [\n")
+        f.write("# Exemples extrets automàticament de tots els xats de WhatsApp\n\n")
+        f.write("WHATSAPP_EXAMPLES = [\n")
         for received, sent in unique_pairs:
             received_clean = received.replace('"', "'")
             sent_clean = sent.replace('"', "'")
             f.write(f'    {{"input": "{received_clean}", "output": "{sent_clean}"}},\n')
         f.write("]\n")
 
-    print(f"\nTotal: {len(unique_pairs)} exemples únics -> {out_path}")
+    print(f"\nTotal: {len(unique_pairs)} exemples únics -> whatsapp_examples.py")
     print(
-        "Següent pas: obre el fitxer, esborra el que no serveixi (temes "
-        "sensibles, missatges poc representatius, coses massa curtes com "
-        "'ok' o 'jaja'), i copia'n 15-30 de bons a persona_config.py -> "
-        "FEW_SHOT_EXAMPLES"
+        "Següent pas: python3 merge_examples.py per combinar-ho amb "
+        "altres plataformes (Instagram, Discord) si en tens, o per "
+        "generar directament all_extracted_examples.py si només fas "
+        "servir WhatsApp."
     )
 
 

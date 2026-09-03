@@ -3,16 +3,25 @@ venv/
 __pycache__/
 *.pyc
 .DS_Store
+*.swp
+*.swo
 
-# Clau API — MAI a GitHub
+# Configuració IDE
+.vscode/
+
+# Clau API i secrets
 .env
 .streamlit/secrets.toml
 
-# Dades personals: xats de WhatsApp exportats i tot el que se n'ha derivat.
-# Contenen converses reals d'altres persones que no han donat consentiment
-# per publicar-se — no han d'acabar en un repositori públic.
+# Agents / eines locals
+.agents/
+
+# Dades personals i corpus derivat
 chats/
 *.zip
 all_extracted_examples.py
+whatsapp_examples.py
+instagram_examples.py
+discord_examples.py
 filtered_examples.py
 style_index.pkl
