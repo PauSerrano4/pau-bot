@@ -1,16 +1,15 @@
 """
-Chatbot que imita el teu estil comunicatiu.
+Personal-style chatbot.
 
-Fa servir la Gemini API (capa gratuïta de Google AI Studio) amb el nou
-SDK unificat `google-genai` — no cal targeta de pagament, només límits
-de peticions per minut/dia.
+Uses the Gemini API (Google AI Studio free tier) via the `google-genai`
+SDK — no payment required, only rate limits apply.
 
-Execució local:
+Local run:
     pip install streamlit google-genai
-    export GEMINI_API_KEY="la-teva-clau"
+    export GEMINI_API_KEY="your-key"
     streamlit run app.py
 
-La clau API la treus (gratis) a https://aistudio.google.com/apikey
+Get a free API key at https://aistudio.google.com/apikey
 """
 
 import os
@@ -24,22 +23,21 @@ from google.genai.errors import ServerError, ClientError
 
 from persona_config import build_system_prompt
 
-# Silencia els avisos inofensius de torchvision (transformers intenta
-# carregar components d'imatge/vídeo que no fem servir, ja que només
-# processem text)
+# Silence harmless torchvision warnings (transformers tries to load
+# optional image/video components we don't need, since we only process
+# text)
 warnings.filterwarnings("ignore", category=UserWarning, module="transformers")
 
 # --------------------------------------------------------------------------
-# Configuració
+# Configuration
 # --------------------------------------------------------------------------
-# IMPORTANT (setembre 2026): Google ha retallat molt els límits gratuïts
-# dels models Gemini 3.x "normals" (gemini-3.7-flash: només 20
-# peticions/dia!). Els models "flash-lite" tenen límits diaris molt més
-# generosos (900-1500/dia) i van perfectes per imitar estil, que no
-# necessita raonament complex. MODEL_FALLBACK s'usa si el principal
-# falla (servidor saturat o quota exhaurida). Si en el futur dona error
-# "model not found" o els límits tornen a canviar, consulta
-# https://ai.google.dev/gemini-api/docs/rate-limits
+# NOTE (September 2026): Google significantly cut free-tier limits for
+# "regular" Gemini 3.x models (gemini-3.7-flash: only 20 requests/day!).
+# "Flash-lite" models have much more generous daily limits (900-1500/day)
+# and work great for style-mimicking, which doesn't need deep reasoning.
+# MODEL_FALLBACK kicks in if the primary model fails (server overload or
+# quota exhausted). If this ever errors with "model not found" or limits
+# change again, check https://ai.google.dev/gemini-api/docs/rate-limits
 MODEL = "gemini-3.1-flash-lite"
 MODEL_FALLBACK = "gemini-2.5-flash-lite"
 MAX_TOKENS = 1024
@@ -47,21 +45,29 @@ MAX_RETRIES = 3
 
 st.set_page_config(page_title="Pau-bot", page_icon="🗣️")
 st.title("🗣️ Pau-bot")
-st.caption("Chatbot entrenat per sonar com tu (few-shot, sense fine-tuning, 100% gratis)")
+st.markdown(
+    "Chat with a bot trained to sound just like Pau. Type a message below "
+    "to get started!"
+)
+st.info(
+    "The first reply may take a little longer than usual while things "
+    "warm up — after that, responses come back quickly.",
+    icon="💡",
+)
 
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 if not api_key:
     st.error(
-        "Falta la variable d'entorn GEMINI_API_KEY. "
-        "Fes `export GEMINI_API_KEY=la-teva-clau` abans d'executar. "
-        "La pots crear gratis a https://aistudio.google.com/apikey"
+        "Missing GEMINI_API_KEY environment variable. "
+        "Run `export GEMINI_API_KEY=your-key` before starting the app. "
+        "Get a free key at https://aistudio.google.com/apikey"
     )
     st.stop()
 
 client = genai.Client(api_key=api_key)
 
 # --------------------------------------------------------------------------
-# Estat del xat
+# Chat state
 # --------------------------------------------------------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -71,13 +77,13 @@ for msg in st.session_state.messages:
         st.markdown(msg["content"])
 
 # --------------------------------------------------------------------------
-# Input de l'usuari
+# User input
 # --------------------------------------------------------------------------
-user_input = st.chat_input("Escriu un missatge com si li escrivissis a Pau...")
+user_input = st.chat_input("Type a message, as if you were texting Pau...")
 
 def call_gemini_with_retry(contents, system_prompt):
-    """Crida a l'API amb reintents i fallback si el model principal
-    està saturat (503) o ha exhaurit la quota diària/per minut (429)."""
+    """Calls the API with retries and fallback if the primary model is
+    overloaded (503) or has run out of daily/per-minute quota (429)."""
     config = types.GenerateContentConfig(
         system_instruction=system_prompt,
         max_output_tokens=MAX_TOKENS,
@@ -94,18 +100,18 @@ def call_gemini_with_retry(contents, system_prompt):
             except ServerError as e:
                 last_error = e
                 if getattr(e, "code", None) == 503:
-                    time.sleep(2 ** attempt)  # espera 1s, 2s, 4s
+                    time.sleep(2 ** attempt)  # wait 1s, 2s, 4s
                     continue
-                raise  # altres errors de servidor, no reintentem
+                raise  # other server errors, don't retry
             except ClientError as e:
                 last_error = e
                 if getattr(e, "code", None) == 429:
-                    # Quota exhaurida (diària o per minut): reintentar amb
-                    # el mateix model no serveix de res si és el límit
-                    # diari, així que passem directament al següent model.
+                    # Quota exhausted (daily or per-minute): retrying the
+                    # same model won't help if it's the daily limit, so
+                    # move straight to the next model.
                     break
-                raise  # altres errors de client (petició mal formada, etc.)
-        # esgotats els reintents (o quota exhaurida) amb aquest model
+                raise  # other client errors (malformed request, etc.)
+        # retries exhausted (or quota hit) with this model
 
     raise last_error
 
@@ -116,10 +122,10 @@ if user_input:
         st.markdown(user_input)
 
     with st.chat_message("assistant"):
-        with st.spinner("Pensant com ho diria Pau..."):
+        with st.spinner("Thinking of how Pau would put it..."):
             system_prompt = build_system_prompt(user_message=user_input)
 
-            # El nou SDK fa servir "user"/"model" en lloc de "user"/"assistant"
+            # The new SDK uses "user"/"model" instead of "user"/"assistant"
             contents = [
                 types.Content(
                     role="user" if m["role"] == "user" else "model",
@@ -133,39 +139,37 @@ if user_input:
                 reply = response.text
             except ClientError:
                 reply = (
-                    "⚠️ S'ha exhaurit la quota gratuïta de Gemini per avui "
-                    "(o per aquest minut). Torna-ho a provar més tard, o "
-                    "revisa el teu ús a https://ai.dev/rate-limit"
+                    "⚠️ This chatbot has hit its free usage limit for now. "
+                    "Please try again in a little while!"
                 )
             except ServerError:
                 reply = (
-                    "⚠️ Els servidors de Gemini estan saturats ara mateix. "
-                    "Torna-ho a provar d'aquí una estona."
+                    "⚠️ The AI service is a bit overloaded right now. "
+                    "Please try again shortly."
                 )
             st.markdown(reply)
 
     st.session_state.messages.append({"role": "assistant", "content": reply})
 
 # --------------------------------------------------------------------------
-# Sidebar amb info útil
+# Sidebar with helpful info
 # --------------------------------------------------------------------------
 with st.sidebar:
-    st.header("Sobre aquest bot")
+    st.header("About this bot")
     st.write(
-        "Aquest bot fa servir *few-shot prompting*: al `persona_config.py` "
-        "hi ha exemples reals del teu estil que es passen com a context "
-        "al model abans de cada resposta."
+        "This chatbot has learned Pau's writing style from real "
+        "conversations, so it replies the way he actually would — same "
+        "tone, same phrasing, same vibe."
     )
     st.write(
-        f"**Cost:** fa servir la capa gratuïta de la Gemini API "
-        f"({MODEL}). Sense targeta de pagament, amb límits de peticions "
-        f"per minut/dia que per a ús personal van sobrats."
+        "**Cost:** completely free to use. It runs on a free-tier AI "
+        "service, so replies might occasionally be a bit slower during "
+        "busy periods."
     )
     st.write(
-        "**Per millorar-lo:** afegeix més exemples variats a "
-        "`FEW_SHOT_EXAMPLES` dins `persona_config.py`, o genera l'índex "
-        "d'estil amb `build_style_index.py` per a retrieval dinàmic."
+        "**Heads up:** this is a fun personal project, not a real "
+        "conversation with Pau — treat what it says accordingly!"
     )
-    if st.button("Neteja la conversa"):
+    if st.button("Clear conversation"):
         st.session_state.messages = []
         st.rerun()
