@@ -42,6 +42,7 @@ MODEL = "gemini-3.1-flash-lite"
 MODEL_FALLBACK = "gemini-2.5-flash-lite"
 MAX_TOKENS = 1024
 MAX_RETRIES = 3
+MAX_MESSAGES_PER_SESSION = 3  # keeps one visitor from draining the shared free quota
 
 st.set_page_config(page_title="Pau-bot", page_icon="🗣️")
 st.title("🗣️ Pau-bot")
@@ -71,6 +72,8 @@ client = genai.Client(api_key=api_key)
 # --------------------------------------------------------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "message_count" not in st.session_state:
+    st.session_state.message_count = 0
 
 for msg in st.session_state.messages:
     avatar = "🧑" if msg["role"] == "user" else "🗣️"
@@ -122,35 +125,50 @@ if user_input:
     with st.chat_message("user", avatar="🧑"):
         st.markdown(user_input)
 
-    with st.chat_message("assistant", avatar="🗣️"):
-        with st.spinner("Thinking of how Pau would put it..."):
-            system_prompt = build_system_prompt(user_message=user_input)
-
-            # The new SDK uses "user"/"model" instead of "user"/"assistant"
-            contents = [
-                types.Content(
-                    role="user" if m["role"] == "user" else "model",
-                    parts=[types.Part(text=m["content"])],
-                )
-                for m in st.session_state.messages
-            ]
-
-            try:
-                response = call_gemini_with_retry(contents, system_prompt)
-                reply = response.text
-            except ClientError:
-                reply = (
-                    "⚠️ This chatbot has hit its free usage limit for now. "
-                    "Please try again in a little while!"
-                )
-            except ServerError:
-                reply = (
-                    "⚠️ The AI service is a bit overloaded right now. "
-                    "Please try again shortly."
-                )
+    if st.session_state.message_count >= MAX_MESSAGES_PER_SESSION:
+        # Session limit reached: don't call the API at all, just explain
+        # clearly instead of the user hitting a confusing quota error.
+        reply = (
+            f"🚦 You've reached this session's limit of "
+            f"{MAX_MESSAGES_PER_SESSION} messages. This keeps the free "
+            f"quota available for everyone — refresh the page to start a "
+            f"new session, or come back in a bit!"
+        )
+        with st.chat_message("assistant", avatar="🗣️"):
             st.markdown(reply)
+        st.session_state.messages.append({"role": "assistant", "content": reply})
+    else:
+        st.session_state.message_count += 1
 
-    st.session_state.messages.append({"role": "assistant", "content": reply})
+        with st.chat_message("assistant", avatar="🗣️"):
+            with st.spinner("Thinking of how Pau would put it..."):
+                system_prompt = build_system_prompt(user_message=user_input)
+
+                # The new SDK uses "user"/"model" instead of "user"/"assistant"
+                contents = [
+                    types.Content(
+                        role="user" if m["role"] == "user" else "model",
+                        parts=[types.Part(text=m["content"])],
+                    )
+                    for m in st.session_state.messages
+                ]
+
+                try:
+                    response = call_gemini_with_retry(contents, system_prompt)
+                    reply = response.text
+                except ClientError:
+                    reply = (
+                        "⚠️ This chatbot has hit its free usage limit for now. "
+                        "Please try again in a little while!"
+                    )
+                except ServerError:
+                    reply = (
+                        "⚠️ The AI service is a bit overloaded right now. "
+                        "Please try again shortly."
+                    )
+                st.markdown(reply)
+
+        st.session_state.messages.append({"role": "assistant", "content": reply})
 
 # --------------------------------------------------------------------------
 # Sidebar with helpful info
@@ -170,6 +188,10 @@ with st.sidebar:
     st.write(
         "**Heads up:** this is a fun personal project, not a real "
         "conversation with Pau — treat what it says accordingly!"
+    )
+    st.caption(
+        f"Messages used this session: "
+        f"{st.session_state.message_count}/{MAX_MESSAGES_PER_SESSION}"
     )
     if st.button("Clear conversation"):
         st.session_state.messages = []
