@@ -42,7 +42,7 @@ MODEL = "gemini-3.1-flash-lite"
 MODEL_FALLBACK = "gemini-2.5-flash-lite"
 MAX_TOKENS = 1024
 MAX_RETRIES = 3
-MAX_MESSAGES_PER_SESSION = 3  # keeps one visitor from draining the shared free quota
+MAX_MESSAGES_PER_SESSION = 20  # keeps one visitor from draining the shared free quota
 
 st.set_page_config(page_title="Pau-bot", page_icon="🗣️")
 st.title("🗣️ Pau-bot")
