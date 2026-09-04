@@ -1,9 +1,9 @@
 """
-Filtra els exemples extrets (all_extracted_examples.py) eliminant soroll:
-respostes massa curtes, purament fàtiques ("ok", "jaja"), o buides de
-contingut. Deixa un corpus net per indexar amb build_style_index.py.
+Filter extracted examples (all_extracted_examples.py) by removing noise:
+responses that are too short, purely phatic ("ok", "jaja"), or empty of
+content. Leave a clean corpus to index with build_style_index.py.
 
-Ús:
+Usage:
     python3 filter_examples.py
     (llegeix all_extracted_examples.py, escriu filtered_examples.py)
 """
@@ -11,7 +11,7 @@ contingut. Deixa un corpus net per indexar amb build_style_index.py.
 import re
 from all_extracted_examples import ALL_EXTRACTED_EXAMPLES
 
-# Respostes purament fàtiques que no aporten res com a exemple d'estil
+# Purely phatic responses that add nothing as style examples.
 FILLER_ONLY = {
     "ok", "okey", "oki", "okay", "vale", "val", "va", "si", "sí", "no",
     "jaja", "jajaja", "jajajaja", "jeje", "jejeje", "xD", "xd", "haha",
@@ -19,8 +19,8 @@ FILLER_ONLY = {
     "bueno", "true", "cert", "d'acord", "dacord", "😂", "👍", "❤️",
 }
 
-MIN_CHARS_INPUT = 8    # el context ha de tenir prou substància
-MIN_CHARS_OUTPUT = 6   # la resposta ha d'aportar alguna cosa
+MIN_CHARS_INPUT = 8    # The context must have enough substance.
+MIN_CHARS_OUTPUT = 6   # The response must add something.
 
 
 def normalize(text: str) -> str:
@@ -34,7 +34,7 @@ def is_low_value(input_text: str, output_text: str) -> bool:
         return True
     if normalize(input_text) in FILLER_ONLY:
         return True
-    # missatges que són només emojis/puntuació
+    # Messages containing only emojis/punctuation.
     if not re.search(r"\w", output_text):
         return True
     return False

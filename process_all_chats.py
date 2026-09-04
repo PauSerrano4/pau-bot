@@ -1,22 +1,21 @@
 """
-Descomprimeix i processa TOTS els xats de WhatsApp exportats (.zip) d'una
-carpeta, i ajunta els exemples extrets en un sol fitxer.
+Extract and process ALL exported WhatsApp chats (.zip) in a folder,
+combining the extracted examples into a single file.
 
-Ús:
+Usage:
     python process_all_chats.py /chats/WhatsApp "El Teu Nom"
 
-Què fa:
-    1. Busca tots els .zip dins de la carpeta indicada
-    2. Descomprimeix cadascun a una carpeta temporal
-    3. Dins de cada zip busca el .txt del xat (normalment "_chat.txt" o
-       "WhatsApp Chat with X.txt")
-    4. Passa cada .txt pel parser de extract_whatsapp_examples.py
-    5. Ajunta tots els exemples trobats a un únic fitxer
-       `all_extracted_examples.py`
+What it does:
+     1. Finds all .zip files inside the specified folder.
+     2. Extracts each one into a temporary folder.
+     3. Looks inside each zip for the chat .txt file (usually "_chat.txt" or
+         "WhatsApp Chat with X.txt").
+     4. Passes each .txt file through extract_whatsapp_examples.py.
+     5. Combines all found examples into a single file,
+         `all_extracted_examples.py`.
 
-Nota: si tens xats amb noms de contacte diferents al teu (p.ex. si el teu
-nom apareix diferent segons el telèfon de l'altra persona), pots passar
-diversos noms separats per comes: "Pau,Pau Serrano,Pau S."
+Note: if your name appears differently in different contacts' exports,
+you can pass several comma-separated names: "Pau,Pau Serrano,Pau S."
 """
 
 import sys
@@ -33,9 +32,9 @@ def find_zips(folder: Path):
 
 
 def find_chat_txt(extracted_dir: Path):
-    """Dins d'un zip de WhatsApp sol haver-hi un .txt principal
-    (_chat.txt o "WhatsApp Chat with X.txt") + multimèdia. Agafem el
-    .txt més gran per si hi ha diversos."""
+    """A WhatsApp zip usually contains one main .txt file
+    (_chat.txt or "WhatsApp Chat with X.txt") plus media. Use the
+    largest .txt file when there are several."""
     txts = list(extracted_dir.glob("*.txt"))
     if not txts:
         return None
@@ -49,9 +48,9 @@ def main():
 
     folder = Path(sys.argv[1])
     my_names = [n.strip() for n in sys.argv[2].split(",")]
-    # WhatsApp sovint substitueix el teu propi nom per "Tú" (o "You" en
-    # exportacions en anglès) al fitxer exportat, encara que el teu nom
-    # de perfil sigui un altre. Ho provem sempre com a fallback.
+    # WhatsApp often replaces your name with "Tú" (or "You" in English
+    # exports), even when your profile name is different. Always try these
+    # as fallbacks.
     for fallback in ("Tú", "You"):
         if fallback not in my_names:
             my_names.append(fallback)
@@ -100,7 +99,7 @@ def main():
 
             print(f"  {zip_path.name}: {found_for_this_zip} exemples extrets")
 
-    # Eliminem duplicats exactes mantenint l'ordre
+    # Remove exact duplicates while preserving order.
     seen = set()
     unique_pairs = []
     for received, sent in all_pairs:

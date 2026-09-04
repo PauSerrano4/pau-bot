@@ -1,20 +1,20 @@
 """
-Extreu exemples (parelles pregunta rebuda -> la teva resposta) d'una
-exportació de converses d'Instagram.
+Extract examples (received question -> your reply pairs) from an
+Instagram conversation export.
 
-Com obtenir l'exportació:
-    Instagram > Configuració > Centre de comptes > La teva informació i
-    permisos > Baixa la teva informació > selecciona "Missatges" >
-    format JSON (NO HTML, el parser espera JSON)
+How to get the export:
+    Instagram > Settings > Accounts Center > Your information and
+    permissions > Download your information > select "Messages" >
+    JSON format (NOT HTML; the parser expects JSON)
 
-Estructura típica un cop descomprimit:
-    your_instagram_activity/messages/inbox/<nom_conversa>_<id>/message_1.json
-    (si la conversa és molt llarga, pot haver-hi message_2.json, etc.)
+Typical structure after extraction:
+    your_instagram_activity/messages/inbox/<conversation_name>_<id>/message_1.json
+    (very long conversations may also contain message_2.json, etc.)
 
-Ús:
-    python3 extract_instagram_examples.py "your_instagram_activity/messages/inbox" "El teu nom d'Instagram"
+Usage:
+    python3 extract_instagram_examples.py "your_instagram_activity/messages/inbox" "Your Instagram name"
 
-Genera instagram_examples.py amb INSTAGRAM_EXAMPLES.
+Generates instagram_examples.py with INSTAGRAM_EXAMPLES.
 """
 
 import json
@@ -23,9 +23,9 @@ from pathlib import Path
 
 
 def fix_encoding(text: str) -> str:
-    """Meta exporta el JSON amb un bug conegut de codificació: els
-    caràcters no-ASCII (accents, emojis) queden mal interpretats.
-    Aquest fix és l'estàndard per recuperar el text correcte."""
+    """Fix a known encoding bug in Meta's JSON exports: non-ASCII
+    characters (accents, emojis) can be misinterpreted.
+    This is the standard fix for recovering the correct text."""
     try:
         return text.encode("latin1").decode("utf8")
     except (UnicodeDecodeError, UnicodeEncodeError):
@@ -33,8 +33,8 @@ def fix_encoding(text: str) -> str:
 
 
 def parse_conversation_folder(folder: Path, my_name: str):
-    """Llegeix tots els message_N.json d'una carpeta de conversa i
-    retorna parelles (missatge rebut, la teva resposta)."""
+    """Read all message_N.json files in a conversation folder and
+    return pairs (received message, your reply)."""
     json_files = sorted(folder.glob("message_*.json"))
     if not json_files:
         return []
@@ -45,7 +45,7 @@ def parse_conversation_folder(folder: Path, my_name: str):
             data = json.load(f)
         all_messages.extend(data.get("messages", []))
 
-    # Instagram exporta els missatges de més nou a més antic — els girem
+    # Instagram exports messages from newest to oldest, so reverse them.
     all_messages.sort(key=lambda m: m.get("timestamp_ms", 0))
 
     pairs = []
@@ -59,7 +59,7 @@ def parse_conversation_folder(folder: Path, my_name: str):
         next_content = next_msg.get("content")
 
         if not content or not next_content:
-            continue  # missatges només amb sticker/foto sense text
+            continue  # Messages containing only a sticker/photo have no text.
 
         if sender != my_name and next_sender == my_name:
             pairs.append((fix_encoding(content), fix_encoding(next_content)))

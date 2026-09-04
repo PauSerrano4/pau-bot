@@ -1,5 +1,5 @@
 """
-Personal-style chatbot.
+Chatbot that imitates a personal writing style.
 
 Uses the Gemini API (Google AI Studio free tier) via the `google-genai`
 SDK — no payment required, only rate limits apply.
@@ -52,14 +52,14 @@ st.markdown(
 )
 st.info(
     "The first reply may take a little longer than usual while things "
-    "warm up — after that, responses come back quickly.",
+    "warm up. After that, responses come back quickly.",
     icon="💡",
 )
 
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 if not api_key:
     st.error(
-        "Missing GEMINI_API_KEY environment variable. "
+        "GEMINI_API_KEY environment variable is missing. "
         "Run `export GEMINI_API_KEY=your-key` before starting the app. "
         "Get a free key at https://aistudio.google.com/apikey"
     )
@@ -83,10 +83,10 @@ for msg in st.session_state.messages:
 # --------------------------------------------------------------------------
 # User input
 # --------------------------------------------------------------------------
-user_input = st.chat_input("Type a message, as if you were texting Pau...")
+user_input = st.chat_input("Type a message as if you were texting Pau...")
 
 def call_gemini_with_retry(contents, system_prompt):
-    """Calls the API with retries and fallback if the primary model is
+    """Call the API with retries and fallback if the primary model is
     overloaded (503) or has run out of daily/per-minute quota (429)."""
     config = types.GenerateContentConfig(
         system_instruction=system_prompt,
@@ -126,12 +126,12 @@ if user_input:
         st.markdown(user_input)
 
     if st.session_state.message_count >= MAX_MESSAGES_PER_SESSION:
-        # Session limit reached: don't call the API at all, just explain
-        # clearly instead of the user hitting a confusing quota error.
+        # Session limit reached: do not call the API; explain the limit
+        # clearly instead of showing a confusing quota error.
         reply = (
             f"🚦 You've reached this session's limit of "
             f"{MAX_MESSAGES_PER_SESSION} messages. This keeps the free "
-            f"quota available for everyone — refresh the page to start a "
+            f"quota available for everyone. Refresh the page to start a "
             f"new session, or come back in a bit!"
         )
         with st.chat_message("assistant", avatar="🗣️"):
@@ -176,7 +176,7 @@ if user_input:
 with st.sidebar:
     st.header("About this bot")
     st.write(
-        "I trained this chatbot on my own writing style, using real "
+        "I trained this chatbot on my own writing style using real "
         "conversations, so it replies the way I actually would — same "
         "tone, same phrasing, same vibe."
     )
@@ -186,7 +186,7 @@ with st.sidebar:
         "busy periods."
     )
     st.write(
-        "**Heads up:** this is just a fun personal project, not really "
+        "**Heads up:** this is just a fun personal project, not actually "
         "me — treat what it says accordingly!"
     )
     st.caption(

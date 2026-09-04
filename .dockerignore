@@ -6,9 +6,9 @@ __pycache__/
 chats/
 *.zip
 
-# Dades personals extretes — si les vols dins la imatge (per exemple per
-# desplegar amb el teu estil ja indexat), esborra les línies següents.
-# Si prefereixes que cadascú generi el seu propi corpus, deixa-les.
+# Extracted personal data. If you want it inside the image (for example, to
+# deploy with your style already indexed), remove the following lines.
+# If you prefer each person to generate their own corpus, leave them in place.
 all_extracted_examples.py
 filtered_examples.py
 style_index.pkl

@@ -1,9 +1,9 @@
 """
-Mostra en cru les primeres línies del .txt dins d'un zip de WhatsApp,
-per poder veure exactament quin format fa servir (útil per depurar el
-parser quan no detecta cap missatge).
+Print the first lines of the .txt file inside a WhatsApp zip as raw text
+so you can inspect its exact format (useful for debugging the parser when
+it does not detect any messages).
 
-Ús:
+Usage:
     python3 debug_chat_format.py "chats/WhatsApp/Aleix Truzman.zip"
 """
 
@@ -27,7 +27,7 @@ def main():
 
         txts = list(tmp_path.glob("*.txt"))
         if not txts:
-            print("No he trobat cap .txt dins del zip")
+            print("No .txt file found inside the zip")
             sys.exit(1)
 
         chat_txt = max(txts, key=lambda p: p.stat().st_size)
@@ -36,7 +36,7 @@ def main():
         with chat_txt.open("r", encoding="utf-8") as f:
             lines = [next(f, "") for _ in range(15)]
 
-        print("Primeres 15 línies (en repr() per veure caràcters ocults):\n")
+        print("First 15 lines (using repr() to reveal hidden characters):\n")
         for i, line in enumerate(lines):
             print(f"{i}: {repr(line)}")
 

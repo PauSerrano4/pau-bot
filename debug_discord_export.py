@@ -1,21 +1,20 @@
 """
-Discord no té una "exportació de xat" senzilla com WhatsApp — cal
-sol·licitar les teves dades:
-    Discord > Configuració d'usuari > Privadesa i seguretat >
-    "Sol·licita totes les meves dades" (triga entre hores i dies a
-    arribar per correu)
+Discord does not have a simple "chat export" like WhatsApp; you need to
+request your data:
+    Discord > User Settings > Privacy & Safety >
+    "Request all of my data" (it can take hours or days to arrive by email)
 
 L'estructura sol ser:
     package/messages/index.json          (mapa canal_id -> nom del canal)
     package/messages/c<canal_id>/messages.csv
 
-Ús d'aquest script (només per inspeccionar, no extreu res encara):
+Usage for this script (inspection only; it does not extract anything yet):
     python3 debug_discord_export.py "package/messages"
 
-Mostra l'estructura real per confirmar si el CSV inclou només els TEUS
-missatges o també els de l'altra persona (Discord ha canviat aquest
-comportament diverses vegades) — necessari per saber si podem construir
-parelles pregunta/resposta o no.
+Shows the real structure to confirm whether the CSV contains only YOUR
+messages or also the other person's (Discord has changed this behavior
+several times), which is necessary to determine whether question/reply
+pairs can be built.
 """
 
 import csv
@@ -46,7 +45,7 @@ def main():
             break
         print(f"  {channel_id}: {name}")
 
-    # Agafem el primer canal amb dades per inspeccionar el CSV
+    # Use the first channel with data to inspect the CSV.
     for channel_id in index:
         csv_path = messages_dir / f"c{channel_id}" / "messages.csv"
         if csv_path.exists():

@@ -1,4 +1,4 @@
-# Entorn i cache de Python
+# Python environment and cache
 venv/
 __pycache__/
 *.pyc
@@ -6,17 +6,17 @@ __pycache__/
 *.swp
 *.swo
 
-# Configuració IDE
+# IDE configuration
 .vscode/
 
-# Clau API i secrets
+# API key and secrets
 .env
 .streamlit/secrets.toml
 
-# Agents / eines locals
+# Agents / local tools
 .agents/
 
-# Dades personals i corpus derivat
+# Personal data and derived corpus
 chats/
 *.zip
 all_extracted_examples.py

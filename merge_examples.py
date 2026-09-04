@@ -1,13 +1,12 @@
 """
-Fusiona els exemples extrets de totes les plataformes disponibles
-(WhatsApp, Instagram, Discord...) en un únic all_extracted_examples.py,
-llest per passar per filter_examples.py.
+Merge examples extracted from all available platforms
+(WhatsApp, Instagram, Discord...) into a single all_extracted_examples.py
+file ready for filter_examples.py.
 
-Detecta automàticament quins fitxers de plataforma existeixen — no cal
-tenir-los tots. Simplement executa aquest script després d'haver corregut
-els extractors de les plataformes que facis servir.
+Automatically detects which platform files exist; you do not need all of
+them. Run this script after running the extractors for the platforms you use.
 
-Ús:
+Usage:
     python3 merge_examples.py
 """
 
@@ -15,7 +14,7 @@ from pathlib import Path
 
 all_pairs = []
 
-# Cada entrada: (nom del mòdul sense .py, nom de la variable dins, etiqueta)
+# Each entry: (module name without .py, variable name, label)
 SOURCES = [
     ("whatsapp_examples", "WHATSAPP_EXAMPLES", "WhatsApp"),
     ("instagram_examples", "INSTAGRAM_EXAMPLES", "Instagram"),
@@ -40,7 +39,7 @@ def main():
               "extract_instagram_examples.py, etc.)")
         return
 
-    # Dedup global (per si el mateix missatge apareix duplicat entre fonts)
+    # Global deduplication (in case the same message appears in multiple sources).
     seen = set()
     unique_pairs = []
     for received, sent in all_pairs:

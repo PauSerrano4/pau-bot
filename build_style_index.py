@@ -1,12 +1,11 @@
 """
-Construeix un índex d'embeddings locals dels exemples filtrats, perquè
-després es puguin recuperar dinàmicament els exemples més semblants a
-cada missatge nou (RAG aplicat a l'estil, no al coneixement).
+Build a local embedding index of the filtered examples so the most similar
+examples can later be retrieved dynamically for each new message (RAG
+applied to style, not knowledge).
 
-Fa servir sentence-transformers (model local, sense necessitat de cap
-API key ni cost per token).
+Uses sentence-transformers (a local model, with no API key or per-token cost).
 
-Ús:
+Usage:
     pip install sentence-transformers numpy
     python3 build_style_index.py
     (llegeix filtered_examples.py, escriu style_index.pkl)
@@ -18,7 +17,7 @@ from sentence_transformers import SentenceTransformer
 
 from filtered_examples import FILTERED_EXAMPLES
 
-# Model multilingüe petit i ràpid, va bé per català/castellà/anglès
+# Small, fast multilingual model that works well for Catalan/Spanish/English.
 MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 
 

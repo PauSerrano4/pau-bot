@@ -1,25 +1,25 @@
 """
-Ajuda a convertir una exportació de xat de WhatsApp en exemples few-shot
-per a persona_config.py.
+Convert a WhatsApp chat export into few-shot examples
+for persona_config.py.
 
-Ús:
+Usage:
     python extract_whatsapp_examples.py xat_exportat.txt "El Teu Nom"
 
-Genera un fitxer `extracted_examples.py` amb parelles (missatge rebut,
-la teva resposta) llestes per copiar dins FEW_SHOT_EXAMPLES.
+Generates an `extracted_examples.py` file with pairs (received message,
+your reply) ready to copy into FEW_SHOT_EXAMPLES.
 
-Nota: el format d'exportació de WhatsApp pot variar lleugerament segons
-el sistema operatiu i idioma del telèfon. Si el parsing falla, revisa
-el patró REGEX_LINE i ajusta'l al format real del teu fitxer.
+Note: WhatsApp's export format may vary slightly depending on the phone's
+operating system and language. If parsing fails, check REGEX_LINE and
+adjust it to match your file's actual format.
 """
 
 import re
 import sys
 from pathlib import Path
 
-# Dos formats habituals d'exportació de WhatsApp:
-# Android/antic:  "12/8/25, 10:32 - Nom: Missatge"
-# iPhone/nou:     "[12/13/25, 11:19:56 PM] Nom: Missatge"
+# Two common WhatsApp export formats:
+# Android/old:  "12/8/25, 10:32 - Name: Message"
+# iPhone/new:   "[12/13/25, 11:19:56 PM] Name: Message"
 REGEX_LINE_DASH = re.compile(
     r"^\d{1,2}/\d{1,2}/\d{2,4},?\s+\d{1,2}:\d{2}\s*-\s*([^:]+):\s*(.*)$"
 )
@@ -31,10 +31,10 @@ REGEX_LINE_BRACKET = re.compile(
 def parse_chat(filepath: str, my_name: str):
     lines = Path(filepath).read_text(encoding="utf-8").splitlines()
 
-    messages = []  # (autor, text)
+    messages = []  # (author, text)
     for line in lines:
-        # elimina marques de direcció de text invisibles que WhatsApp
-        # a vegades afegeix (U+200E, U+200F)
+        # Remove invisible text-direction marks that WhatsApp sometimes
+        # adds (U+200E, U+200F).
         clean_line = line.lstrip("\u200e\u200f")
 
         match = REGEX_LINE_BRACKET.match(clean_line) or REGEX_LINE_DASH.match(clean_line)
@@ -42,11 +42,11 @@ def parse_chat(filepath: str, my_name: str):
             author, text = match.groups()
             messages.append((author.strip(), text.strip()))
         elif messages:
-            # línia de continuació d'un missatge multilínia
+            # Continuation line for a multi-line message.
             author, text = messages[-1]
             messages[-1] = (author, text + " " + line.strip())
 
-    # Construir parelles: missatge d'algú altre seguit d'una resposta teva
+    # Build pairs: someone else's message followed by one of your replies.
     pairs = []
     for i in range(len(messages) - 1):
         author, text = messages[i]

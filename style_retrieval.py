@@ -1,9 +1,9 @@
 """
-Retrieval d'exemples per estil: donat un missatge nou, troba els K
-exemples del corpus més semblants (per embedding) per injectar-los
-com a few-shot dinàmic al system prompt.
+Style-example retrieval: given a new message, find the K most similar
+examples in the corpus (by embedding) and inject them into the system
+prompt as dynamic few-shot examples.
 
-Requereix haver executat prèviament build_style_index.py.
+Requires build_style_index.py to have been run first.
 """
 
 import pickle
@@ -24,13 +24,13 @@ def _load_index():
 
 
 def get_similar_examples(query: str, k: int = 8):
-    """Retorna els k exemples (dicts amb 'input'/'output') més semblants
-    al missatge `query`, ordenats de més a menys similars."""
+    """Return the k most similar examples (dicts with 'input'/'output')
+    for `query`, ordered from most to least similar."""
     examples, embeddings, model = _load_index()
 
     query_emb = model.encode([query], convert_to_numpy=True)[0]
 
-    # similitud del cosinus
+    # Cosine similarity.
     norms = np.linalg.norm(embeddings, axis=1) * np.linalg.norm(query_emb)
     norms[norms == 0] = 1e-10
     similarities = (embeddings @ query_emb) / norms
