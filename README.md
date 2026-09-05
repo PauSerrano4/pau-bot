@@ -4,6 +4,8 @@ A personal chatbot trained to reply in my own writing style, using real
 examples from my WhatsApp and Instagram conversations. Built with
 Streamlit and the Gemini API (free tier, no payment required).
 
+**[Try pau-bot online](https://pau-bot.streamlit.app/)**
+
 ## Project structure
 
 - `app.py` — Streamlit chat interface.
